@@ -104,34 +104,37 @@ class FeedVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)as!FeedCell
-        cell.emailLabel.text = "\(nameArray[indexPath.row]) \(surnameArray[indexPath.row])"
-        
-        cell.commentLabel.text = userCommentArray[indexPath.row]
-        
-        
-        print(profileURLArray)
-        cell.imageViewInCell.sd_setImage(with: URL(string:userImageArray[indexPath.row]))
-        cell.LocationLabel.text = "\(countryNames[indexPath.row]),\(cityNames[indexPath.row])"
-        cell.proiflepic.sd_setImage(with: URL(string:profileURLArray[indexPath.row]))
-        
-        cell.IdLabel.text = IdArray[indexPath.row]
-        
-        cell.likeCounter.text = String(likeArray[indexPath.row])
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        //
-        return cell
+        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath) as! FeedCell
+               
+               if indexPath.row < nameArray.count && indexPath.row < surnameArray.count {
+                   cell.emailLabel.text = "\(nameArray[indexPath.row]) \(surnameArray[indexPath.row])"
+               }
+               
+               if indexPath.row < userCommentArray.count {
+                   cell.commentLabel.text = userCommentArray[indexPath.row]
+               }
+               
+               if indexPath.row < userImageArray.count {
+                   cell.imageViewInCell.sd_setImage(with: URL(string: userImageArray[indexPath.row]))
+               }
+               
+               if indexPath.row < countryNames.count && indexPath.row < cityNames.count {
+                   cell.LocationLabel.text = "\(countryNames[indexPath.row]), \(cityNames[indexPath.row])"
+               }
+               
+               if indexPath.row < IdArray.count {
+                   cell.IdLabel.text = IdArray[indexPath.row]
+               }
+               
+               if indexPath.row < likeArray.count {
+                   cell.likeCounter.text = String(likeArray[indexPath.row])
+               }
+               
+               if indexPath.row < profileURLArray.count {
+                   cell.proiflepic.sd_setImage(with: URL(string: profileURLArray[indexPath.row]))
+               }
+
+               return cell
     }
     
     
@@ -149,7 +152,7 @@ class FeedVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
         let fireStoreDatabase = Firestore.firestore()
         
         
-        fireStoreDatabase.collection("Posts").order(by: "date", descending: true).addSnapshotListener { (snapshot, error) in
+        fireStoreDatabase.collection("Posts").order(by: "postdate", descending: true).addSnapshotListener { (snapshot, error) in
             if error != nil {
                 print(error?.localizedDescription ?? "Error")
             } else {
@@ -177,6 +180,7 @@ class FeedVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
                         if let postedBy = document.get("postedBy") as? String {
                             userEmailArray.append(postedBy)
                         }
+                       
                         
                         if let postComment = document.get("postComment") as? String {
                             userCommentArray.append(postComment)
@@ -206,7 +210,7 @@ class FeedVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
                     
                     
                     
-                    self.getUserData()
+                    self.getUserData2()
                     
                     
                     
@@ -324,40 +328,44 @@ class FeedVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
     }
     
     
-    func getUserData () {
-        
+   
+    func getUserData2() {
         let firestoredatabase = Firestore.firestore()
         
-        var profileURLCount = 0
-        for userdata in 0..<useruidarray.count {
-            let firestoredatabaseref = firestoredatabase.collection("User").document(useruidarray[userdata])
+        var userDataDictionary = [String: (String, String, String)]() // UID: (Name, Surname, ProfileURL)
+        
+        let group = DispatchGroup()
+        
+        for userUID in useruidarray {
+            group.enter()
+            let firestoredatabaseref = firestoredatabase.collection("User").document(userUID)
             firestoredatabaseref.getDocument { document, error in
+                defer { group.leave() }
                 if let document = document, document.exists {
                     let data = document.data()
-                    if let firstname = data?["Name"] as? String {
-                        nameArray.append(firstname)
-                    }
-                    if let lastname = data?["Surname"] as? String {
-                        surnameArray.append(lastname)
-                    }
-                    if let profileURL = data?["profileURL"] as? String {
-                        profileURLArray.append(profileURL)
-                        profileURLCount += 1
-                        
-                        
-                        
-                        if profileURLCount == useruidarray.count {
-                            
-                            self.tableView.reloadData()
-                        }
-                    }
+                    let firstname = data?["Name"] as? String ?? ""
+                    let lastname = data?["Surname"] as? String ?? ""
+                    let profileURL = data?["profileURL"] as? String ?? ""
+                    userDataDictionary[userUID] = (firstname, lastname, profileURL)
                 } else {
                     print("document does not exist")
                 }
             }
         }
+        
+        group.notify(queue: .main) {
+            // UID sırasına göre dizileri güncelle
+            for userUID in useruidarray {
+                if let userData = userDataDictionary[userUID] {
+                    nameArray.append(userData.0)
+                    surnameArray.append(userData.1)
+                   profileURLArray.append(userData.2)
+                }
+            }
+            self.tableView.reloadData()
+        }
     }
-    
+
     
     
     

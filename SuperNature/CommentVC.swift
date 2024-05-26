@@ -1,10 +1,9 @@
-
-
 import UIKit
 import Firebase
 import FirebaseDatabase
 import FirebaseStorage
 import SDWebImage
+
 var UserUidArrayCommentVC = [String]()
 var CommentArray = [String]()
 var NameArrayCommentVC = [String]()
@@ -12,8 +11,7 @@ var SurnameArrayCommentVC = [String]()
 var EmailArray = [String]()
 var profileURLArrayCommentVC = [String]()
 
-
-class CommentVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
+class CommentVC: UIViewController, UITableViewDelegate, UITableViewDataSource {
     @IBOutlet weak var TableView: UITableView!
     
     override func viewDidLoad() {
@@ -47,11 +45,12 @@ class CommentVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
         let firestore = Firestore.firestore()
         let docRef = firestore.collection("Posts").document(selectedId)
         
-        
         UserUidArrayCommentVC.removeAll(keepingCapacity: false)
         CommentArray.removeAll(keepingCapacity: false)
         EmailArray.removeAll(keepingCapacity: false)
         profileURLArrayCommentVC.removeAll(keepingCapacity: false)
+        NameArrayCommentVC.removeAll(keepingCapacity: false)
+        SurnameArrayCommentVC.removeAll(keepingCapacity: false)
         
         docRef.addSnapshotListener { documentSnapshot, error in
             if let error = error {
@@ -76,7 +75,6 @@ class CommentVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
                 EmailArray.append(contentsOf: emailcommentArray)
             }
             
-            
             self.getUserDataCommentVC()
         }
     }
@@ -85,6 +83,8 @@ class CommentVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
         let firestore = Firestore.firestore()
         let dispatchGroup = DispatchGroup()
         
+        var userDataDictionary = [String: (String, String, String)]() // UID: (Name, Surname, ProfileURL)
+        
         for userId in UserUidArrayCommentVC {
             dispatchGroup.enter()
             
@@ -92,10 +92,10 @@ class CommentVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
             userDocRef.getDocument { document, error in
                 if let document = document, document.exists {
                     let data = document.data()
-                    
-                    if let profileURL = data?["profileURL"] as? String {
-                        profileURLArrayCommentVC.append(profileURL)
-                    }
+                    let firstname = data?["Name"] as? String ?? ""
+                    let lastname = data?["Surname"] as? String ?? ""
+                    let profileURL = data?["profileURL"] as? String ?? ""
+                    userDataDictionary[userId] = (firstname, lastname, profileURL)
                 } else {
                     print("Document does not exist")
                 }
@@ -104,27 +104,23 @@ class CommentVC: UIViewController,UITableViewDelegate,UITableViewDataSource {
         }
         
         dispatchGroup.notify(queue: .main) {
+            for userId in UserUidArrayCommentVC {
+                if let userData = userDataDictionary[userId] {
+                    NameArrayCommentVC.append(userData.0)
+                    SurnameArrayCommentVC.append(userData.1)
+                    profileURLArrayCommentVC.append(userData.2)
+                }
+            }
             
-            let count = min(CommentArray.count, EmailArray.count, profileURLArrayCommentVC.count)
+            let count = min(CommentArray.count, EmailArray.count, profileURLArrayCommentVC.count, NameArrayCommentVC.count, SurnameArrayCommentVC.count)
             CommentArray = Array(CommentArray.prefix(count))
             EmailArray = Array(EmailArray.prefix(count))
             profileURLArrayCommentVC = Array(profileURLArrayCommentVC.prefix(count))
+            NameArrayCommentVC = Array(NameArrayCommentVC.prefix(count))
+            SurnameArrayCommentVC = Array(SurnameArrayCommentVC.prefix(count))
             
             self.TableView.reloadData()
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 

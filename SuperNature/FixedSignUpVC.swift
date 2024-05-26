@@ -22,6 +22,7 @@ class FixedSignUpVC: UIViewController,UIImagePickerControllerDelegate & UINaviga
     @IBOutlet weak var DatePicker: UIDatePicker!
     
     
+    @IBOutlet weak var DateOfBirth: UILabel!
     
     
     
@@ -134,7 +135,7 @@ class FixedSignUpVC: UIViewController,UIImagePickerControllerDelegate & UINaviga
         self.navigationItem.leftBarButtonItem = customButton
         
         
-        
+        UserProfile.image = UIImage(systemName: "person.crop.circle.fill")
         let gestureRecognizer = UITapGestureRecognizer(target: self, action: #selector(goToPickerController))
         UserProfile.isUserInteractionEnabled = true
         UserProfile.addGestureRecognizer(gestureRecognizer)

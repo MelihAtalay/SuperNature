@@ -40,7 +40,7 @@ class MapViewVC: UIViewController,MKMapViewDelegate,CLLocationManagerDelegate{
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         let location = CLLocationCoordinate2D(latitude: locations[0].coordinate.latitude, longitude: locations[0].coordinate.longitude)
-        let span =  MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+        let span =  MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
         let region = MKCoordinateRegion(center: location, span: span)
         MapView.setRegion(region, animated: true)
         let gestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(chooseLocation(gestureRecognizer: )))

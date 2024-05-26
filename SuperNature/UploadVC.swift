@@ -12,7 +12,7 @@ import CoreData
 class UploadVC: UIViewController, UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     
     @IBOutlet weak var imageView: UIImageView!
-    @IBOutlet weak var DatePicker: UIDatePicker!
+  
     
     @IBOutlet weak var CommentText: UITextField!
     var longitudeArray = [Double] ()
@@ -129,7 +129,7 @@ class UploadVC: UIViewController, UIImagePickerControllerDelegate & UINavigation
                             let imageUrl = url?.absoluteString
                             let firestoreDataBase = Firestore.firestore()
                             var firestoreRef : DocumentReference? = nil
-                            let firestorePost = ["imageUrl":imageUrl!,"postedBy":Auth.auth().currentUser!.email!,"postComment":self.CommentText.text!,"date":self.DatePicker.date,"postdate":FieldValue.serverTimestamp(),"likes":0,"UserUUIDArray": [UUID](),"longitude":self.longitudeArray.last,"latitude":self.latitudeArray.last,"CommentArray": [String](),"EmailCommentArray": [String](),"PosterUID":Auth.auth().currentUser?.uid] as [String:Any]
+                            let firestorePost = ["imageUrl":imageUrl!,"postedBy":Auth.auth().currentUser!.email!,"postComment":self.CommentText.text!,"postdate":FieldValue.serverTimestamp(),"likes":0,"UserUUIDArray": [UUID](),"longitude":self.longitudeArray.last,"latitude":self.latitudeArray.last,"CommentArray": [String](),"EmailCommentArray": [String](),"PosterUID":Auth.auth().currentUser?.uid] as [String:Any]
                             firestoreRef = firestoreDataBase.collection("Posts").addDocument(data: firestorePost, completion: { a in
                                 if a != nil {
                                     self.AlertCreater(title: "error", message: a?.localizedDescription ?? "Error")
@@ -137,8 +137,8 @@ class UploadVC: UIViewController, UIImagePickerControllerDelegate & UINavigation
                                 else {
                                     self.imageView.image = UIImage(systemName: "photo.on.rectangle")
                                     self.CommentText.text = ""
-                                    self.tabBarController?.selectedIndex=0
-                                    
+                                    //self.tabBarController?.selectedIndex=0
+                                    self.AlertCreater(title: "Completed", message: "Shared Successfully")
                                     
                                 }
                                 

@@ -3,7 +3,7 @@ import UIKit
 import Firebase
 import SDWebImage
 import Foundation
-
+import FirebaseStorage
 class SettingsVC: UIViewController,UIImagePickerControllerDelegate & UINavigationControllerDelegate {
     
     @IBOutlet weak var ProfilePicture: UIImageView!
@@ -18,6 +18,62 @@ class SettingsVC: UIViewController,UIImagePickerControllerDelegate & UINavigatio
     
     
     @IBOutlet weak var Click: UIImageView!
+    
+    @IBAction func ChangeProfile(_ sender: Any) {
+        guard let image = ProfilePicture.image else {
+                print("No image to upload")
+                return
+            }
+            
+            guard let imageData = image.jpegData(compressionQuality: 0.5) else {
+                print("Failed to convert image to data")
+                return
+            }
+            
+            let storageRef = Storage.storage().reference().child("media").child("\(UUID().uuidString).jpg")
+            
+            storageRef.putData(imageData, metadata: nil) { (metadata, error) in
+                if let error = error {
+                    print("Error uploading image: \(error)")
+                    return
+                }
+                
+                storageRef.downloadURL { (url, error) in
+                    if let error = error {
+                        print("Error getting download URL: \(error)")
+                        return
+                    }
+                    
+                    guard let downloadURL = url else {
+                        print("Download URL not found")
+                        return
+                    }
+                    
+                    let urlString = downloadURL.absoluteString
+                    print("Image uploaded successfully. Download URL: \(urlString)")
+                    guard let currentUserUID = Auth.auth().currentUser?.uid else {
+                            print("No current user")
+                            return
+                        }
+                        
+                        let fireStoreDatabase = Firestore.firestore()
+                        let docRef = fireStoreDatabase.collection("User").document(currentUserUID)
+                        
+                        docRef.updateData(["profileURL": urlString]) { error in
+                            if let error = error {
+                                print("Error updating document: \(error)")
+                            } else {
+                                print("Document successfully updated")
+                            }
+                        }
+                  
+                }
+            }
+        
+        
+        
+        
+    }
     
     
     override func viewDidLoad() {
@@ -61,11 +117,6 @@ class SettingsVC: UIViewController,UIImagePickerControllerDelegate & UINavigatio
         
     }
     
-    @IBAction func ChangePasswordClicked(_ sender: Any) {
-        
-        
-        
-    }
     
     
     
